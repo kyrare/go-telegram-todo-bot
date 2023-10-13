@@ -1,0 +1,42 @@
+version: "3"
+
+services:
+  mysql:
+    image: mysql:8.1
+    container_name: mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysqldata:/var/lib/mysql
+      - ./database/migrations:/docker-entrypoint-initdb.d
+    ports:
+      - '3306:3306'
+    networks:
+      - app
+
+  go:
+    build:
+      context: ./
+      dockerfile: ./docker/go/Dockerfile
+    container_name: go
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      BOT_SECRET: ${BOT_SECRET}
+    depends_on:
+      - mysql
+    networks:
+      - app
+
+networks:
+  app:
+
+volumes:
+  mysqldata:
+    driver: local
